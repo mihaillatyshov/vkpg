@@ -6,4 +6,4 @@ is_testing: false
 
 server-port: 8080
 
-dbconnection: 'postgresql://vkpg_user:password@localhost:5432/vkpg_db_1'
+dbconnection: "postgresql://postgres:postgres@localhost:5432/forum"
