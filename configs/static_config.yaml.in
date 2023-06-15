@@ -62,6 +62,11 @@ components_manager:
             method: POST                  # It will only reply to POST requests.
             task_processor: main-task-processor  # Run it on CPU bound task processor
 
+        handler-user-create:
+            path: /api/user/{nickname}/create
+            method: POST
+            task_processor: main-task-processor
+
         postgres-db-1:
             dbconnection: $dbconnection
             blocking_task_processor: fs-task-processor

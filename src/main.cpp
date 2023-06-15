@@ -5,6 +5,7 @@
 #include <userver/testsuite/testsuite_support.hpp>
 #include <userver/utils/daemon_run.hpp>
 
+#include "Users/UserCreate.hpp"
 #include "hello.hpp"
 
 int main(int argc, char* argv[]) {
@@ -15,6 +16,7 @@ int main(int argc, char* argv[]) {
                             .Append<userver::server::handlers::TestsControl>();
 
   vkpg::AppendHello(component_list);
+  vkpg::AppendUserCreate(component_list);
 
   return userver::utils::DaemonMain(argc, argv, component_list);
 }
