@@ -48,10 +48,7 @@ class UserCreate final : public userver::server::handlers::HttpHandlerJsonBase {
             "VALUES($1, $2, $3, $4) "
             "RETURNING nickname, fullname, about, email ",
             nickname, fullname, about, email);
-        return userver::formats::json::MakeObject("nickname", nickname,  //
-                                                  "fullname", fullname,  //
-                                                  "about", about,        //
-                                                  "email", email);
+        return MakeUserJson(nickname, fullname, about, email);
       } catch (...) {
         auto result = m_PGCluster->Execute(
             userver::storages::postgres::ClusterHostType::kMaster,
@@ -62,11 +59,10 @@ class UserCreate final : public userver::server::handlers::HttpHandlerJsonBase {
             result.AsSetOf<UserTypePG>(userver::storages::postgres::kRowTag);
         userver::formats::json::ValueBuilder builder;
         for (const auto& user : users) {
-          builder.PushBack(userver::formats::json::MakeObject(
-              "nickname", std::get<0>(user),  //
-              "fullname", std::get<1>(user),  //
-              "about", std::get<2>(user),     //
-              "email", std::get<3>(user)));
+          builder.PushBack(MakeUserJson(std::get<0>(user),  //
+                                        std::get<1>(user),  //
+                                        std::get<2>(user),  //
+                                        std::get<3>(user)));
         }
         request.SetResponseStatus(userver::server::http::HttpStatus::kConflict);
         return builder.ExtractValue();
