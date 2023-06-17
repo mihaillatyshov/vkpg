@@ -7,19 +7,25 @@
 
 namespace vkpg {
 
-using UserTypePG = std::tuple<std::string,  // nickname
-                              std::string,  // fullname
-                              std::string,  // about
-                              std::string   // email
+using UserTypePG = std::tuple<std::string,                 // nickname
+                              std::string,                 // fullname
+                              std::optional<std::string>,  // about
+                              std::string                  // email
                               >;
 
-inline userver::formats::json::Value MakeUserJson(std::string_view nickname,
-                                                  std::string_view fullname,
-                                                  std::string_view about,
-                                                  std::string_view email) {
-  return userver::formats::json::MakeObject("nickname", nickname,  //
-                                            "fullname", fullname,  //
-                                            "about", about,        //
-                                            "email", email);
+inline userver::formats::json::Value MakeUserJson(
+    std::string_view nickname,         //
+    std::string_view fullname,         //
+    std::optional<std::string> about,  //
+    std::string_view email) {
+  userver::formats::json::ValueBuilder builder;
+  builder["nickname"] = nickname;
+  builder["fullname"] = fullname;
+  builder["email"] = email;
+  if (about.has_value()) {
+    builder["about"] = about.value();
+  }
+  return builder.ExtractValue();
 }
+
 }  // namespace vkpg

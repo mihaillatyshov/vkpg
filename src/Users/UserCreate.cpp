@@ -37,7 +37,7 @@ class UserCreate final : public userver::server::handlers::HttpHandlerJsonBase {
     const auto& nickname = request.GetPathArg("nickname");
 
     const auto fullname = json["fullname"].As<std::string>("");
-    const auto about = json["about"].As<std::string>("");
+    const auto about = json["about"].As<std::optional<std::string>>({});
     const auto email = json["email"].As<std::string>("");
 
     if (!nickname.empty() && !fullname.empty() && !email.empty()) {
