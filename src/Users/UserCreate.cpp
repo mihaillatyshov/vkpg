@@ -25,7 +25,7 @@ class UserCreate final : public userver::server::handlers::HttpHandlerJsonBase {
   UserCreate(const userver::components::ComponentConfig& config,
              const userver::components::ComponentContext& component_context)
       : HttpHandlerJsonBase(config, component_context),
-        m_PGCluster(
+        m_ClusterPG(
             component_context
                 .FindComponent<userver::components::Postgres>("postgres-db-1")
                 .GetCluster()) {}
@@ -40,40 +40,41 @@ class UserCreate final : public userver::server::handlers::HttpHandlerJsonBase {
     const auto about = json["about"].As<std::optional<std::string>>({});
     const auto email = json["email"].As<std::string>("");
 
-    if (!nickname.empty() && !fullname.empty() && !email.empty()) {
-      try {
-        auto result = m_PGCluster->Execute(
-            userver::storages::postgres::ClusterHostType::kMaster,
-            "INSERT INTO tp.users(nickname, fullname, about, email) "
-            "VALUES($1, $2, $3, $4) "
-            "RETURNING nickname, fullname, about, email ",
-            nickname, fullname, about, email);
-        return MakeUserJson(nickname, fullname, about, email);
-      } catch (...) {
-        auto result = m_PGCluster->Execute(
-            userver::storages::postgres::ClusterHostType::kMaster,
-            "SELECT nickname, fullname, about, email FROM tp.users "
-            "WHERE nickname = $1 OR email = $2 ",
-            nickname, email);
-        auto users =
-            result.AsSetOf<UserTypePG>(userver::storages::postgres::kRowTag);
-        userver::formats::json::ValueBuilder builder;
-        for (const auto& user : users) {
-          builder.PushBack(MakeUserJson(std::get<0>(user),  //
-                                        std::get<1>(user),  //
-                                        std::get<2>(user),  //
-                                        std::get<3>(user)));
-        }
-        request.SetResponseStatus(userver::server::http::HttpStatus::kConflict);
-        return builder.ExtractValue();
-      }
+    if (nickname.empty() || fullname.empty() || email.empty()) {
+      request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
+      return userver::formats::json::MakeObject("message", "bad data");
     }
 
-    request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
-    return userver::formats::json::MakeObject("message", "error");
+    try {
+      auto result = m_ClusterPG->Execute(
+          userver::storages::postgres::ClusterHostType::kMaster,
+          "INSERT INTO tp.users(nickname, fullname, about, email) "
+          "VALUES($1, $2, $3, $4) "
+          "RETURNING nickname, fullname, about, email",
+          nickname, fullname, about, email);
+      const auto& user = result.AsSingleRow<User::TypePG>(
+          userver::storages::postgres::kRowTag);
+      request.SetResponseStatus(userver::server::http::HttpStatus::kCreated);
+      return User::MakeJson(user);
+    } catch (...) {
+      auto result = m_ClusterPG->Execute(
+          userver::storages::postgres::ClusterHostType::kMaster,
+          "SELECT nickname, fullname, about, email FROM tp.users "
+          "WHERE lower(nickname) = lower($1) OR lower(email) = lower($2) ",
+          nickname, email);
+      auto users =
+          result.AsSetOf<User::TypePG>(userver::storages::postgres::kRowTag);
+      userver::formats::json::ValueBuilder builder;
+      for (const auto& user : users) {
+        builder.PushBack(User::MakeJson(user));
+      }
+      request.SetResponseStatus(userver::server::http::HttpStatus::kConflict);
+      return builder.ExtractValue();
+    }
   }
 
-  userver::storages::postgres::ClusterPtr m_PGCluster;
+ private:
+  userver::storages::postgres::ClusterPtr m_ClusterPG;
 };
 
 }  // namespace

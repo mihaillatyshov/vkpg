@@ -8,11 +8,14 @@ from testsuite.databases import pgsql
 
 async def test_first_time_users(service_client):
     response = await service_client.post(
-        '/v1/hello',
-        params={'name': 'userver'},
+        '/api/user/lm1/create',
+        json={
+            "email": "lmail1@mail.ru",
+            "about": "some about 1",
+            "fullname": "Name 1"
+        },
     )
-    assert response.status == 200
-    assert response.text == 'Hello, userver!\n'
+    assert response.status == 201
 
 
 async def test_db_updates(service_client):

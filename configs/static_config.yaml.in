@@ -67,6 +67,11 @@ components_manager:
             method: POST
             task_processor: main-task-processor
 
+        handler-user-profile:
+            path: /api/user/{nickname}/profile
+            method: GET,POST
+            task_processor: main-task-processor
+
         postgres-db-1:
             dbconnection: $dbconnection
             blocking_task_processor: fs-task-processor

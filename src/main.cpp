@@ -6,6 +6,7 @@
 #include <userver/utils/daemon_run.hpp>
 
 #include "Users/UserCreate.hpp"
+#include "Users/UserProfile.hpp"
 #include "hello.hpp"
 
 int main(int argc, char* argv[]) {
@@ -17,6 +18,7 @@ int main(int argc, char* argv[]) {
 
   vkpg::AppendHello(component_list);
   vkpg::AppendUserCreate(component_list);
+  vkpg::AppendUserProfile(component_list);
 
   return userver::utils::DaemonMain(argc, argv, component_list);
 }
