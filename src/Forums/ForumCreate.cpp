@@ -1,5 +1,6 @@
 #include "ForumCreate.hpp"
 
+#include "../Users/User.hpp"
 #include "Forum.hpp"
 
 #include <fmt/format.h>
@@ -43,35 +44,53 @@ class ForumCreate final
       request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
       return userver::formats::json::MakeObject("message", "bad data");
     }
-    request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
-    return userver::formats::json::MakeObject("message", "bad data");
 
-    // try {
-    //   auto result = m_ClusterPG->Execute(
-    //       userver::storages::postgres::ClusterHostType::kMaster,
-    //       "INSERT INTO tp.forum(title, slug, user) "
-    //       "VALUES($1, $2, $3, $4) "
-    //       "RETURNING nickname, fullname, about, email",
-    //       nickname, fullname, about, email);
-    //   const auto& user =
-    //       result.AsSingleRow<UserTypePG>(userver::storages::postgres::kRowTag);
-    //   request.SetResponseStatus(userver::server::http::HttpStatus::kCreated);
-    //   return MakeUserJson(user);
-    // } catch (...) {
-    //   auto result = m_ClusterPG->Execute(
-    //       userver::storages::postgres::ClusterHostType::kMaster,
-    //       "SELECT nickname, fullname, about, email FROM tp.users "
-    //       "WHERE lower(nickname) = lower($1) OR lower(email) = lower($2) ",
-    //       nickname, email);
-    //   auto users =
-    //       result.AsSetOf<UserTypePG>(userver::storages::postgres::kRowTag);
-    //   userver::formats::json::ValueBuilder builder;
-    //   for (const auto& user : users) {
-    //     builder.PushBack(MakeUserJson(user));
-    //   }
-    //   request.SetResponseStatus(userver::server::http::HttpStatus::kConflict);
-    //   return builder.ExtractValue();
-    // }
+    auto userResult = m_ClusterPG->Execute(
+        userver::storages::postgres::ClusterHostType::kMaster,
+        "SELECT id FROM tp.users WHERE lower(nickname) = ($1) ", nickname);
+    if (userResult.IsEmpty()) {
+      return ReturnUserNotFound(request, nickname);
+    }
+    const int userId = userResult.AsSingleRow<int>();
+
+    try {
+      auto result = m_ClusterPG->Execute(
+          userver::storages::postgres::ClusterHostType::kMaster,
+          "INSERT INTO tp.forum(title, slug, user_id) "
+          "VALUES($1, $2, $3) "
+          "RETURNING title, slug, posts, threads ",
+          title, slug, userId);
+
+      //   const auto& user =
+      //       result.AsSingleRow<UserTypePG>(userver::storages::postgres::kRowTag);
+      //   return MakeUserJson(user);
+      request.SetResponseStatus(userver::server::http::HttpStatus::kCreated);
+      return userver::formats::json::MakeObject("message", "created, TODO");
+    } catch (...) {
+      //   auto result = m_ClusterPG->Execute(
+      //       userver::storages::postgres::ClusterHostType::kMaster,
+      //       "SELECT nickname, fullname, about, email FROM tp.users "
+      //       "WHERE lower(nickname) = lower($1) OR lower(email) = lower($2) ",
+      //       nickname, email);
+      //   auto users =
+      //       result.AsSetOf<UserTypePG>(userver::storages::postgres::kRowTag);
+      //   userver::formats::json::ValueBuilder builder;
+      //   for (const auto& user : users) {
+      //     builder.PushBack(MakeUserJson(user));
+      //   }
+      request.SetResponseStatus(userver::server::http::HttpStatus::kConflict);
+      return userver::formats::json::MakeObject("message", "conflict, TODO");
+      //   return builder.ExtractValue();
+    }
+  }
+
+ private:
+  userver::formats::json::Value ReturnUserNotFound(
+      const userver::server::http::HttpRequest& request,
+      std::string_view nickname) const {
+    request.SetResponseStatus(userver::server::http::HttpStatus::kNotFound);
+    return userver::formats::json::MakeObject(
+        "message", fmt::format("Can't find user with id {}", nickname));
   }
 
  private:

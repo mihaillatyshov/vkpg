@@ -5,6 +5,7 @@
 #include <userver/testsuite/testsuite_support.hpp>
 #include <userver/utils/daemon_run.hpp>
 
+#include "Forums/ForumCreate.hpp"
 #include "Users/UserCreate.hpp"
 #include "Users/UserProfile.hpp"
 #include "hello.hpp"
@@ -19,6 +20,7 @@ int main(int argc, char* argv[]) {
   vkpg::AppendHello(component_list);
   vkpg::AppendUserCreate(component_list);
   vkpg::AppendUserProfile(component_list);
+  vkpg::AppendForumCreate(component_list);
 
   return userver::utils::DaemonMain(argc, argv, component_list);
 }
