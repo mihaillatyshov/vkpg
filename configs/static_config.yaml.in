@@ -79,6 +79,16 @@ components_manager:
             method: POST
             task_processor: main-task-processor
 
+        handler-forum-details:
+            path: /api/forum/{slug}/details
+            method: GET
+            task_processor: main-task-processor
+
+        handler-forum-users:
+            path: /api/forum/{slug}/users
+            method: GET
+            task_processor: main-task-processor
+
 
         postgres-db-1:
             dbconnection: $dbconnection

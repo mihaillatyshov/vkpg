@@ -1,5 +1,7 @@
 #include "User.hpp"
 
+#include <fmt/format.h>
+
 namespace vkpg {
 
 namespace User {
@@ -33,6 +35,22 @@ userver::storages::postgres::ResultSet SelectByNickname(
       "SELECT nickname, fullname, about, email FROM tp.users "
       "WHERE lower(nickname) = ($1) ",
       nickname);
+}
+
+userver::storages::postgres::ResultSet SelectIdByNickname(
+    const userver::storages::postgres::ClusterPtr& cluster,
+    std::string_view nickname) {
+  return cluster->Execute(
+      userver::storages::postgres::ClusterHostType::kMaster,
+      "SELECT id FROM tp.users WHERE lower(nickname) = ($1) ", nickname);
+}
+
+userver::formats::json::Value ReturnNotFound(
+    const userver::server::http::HttpRequest& request,
+    std::string_view nickname) {
+  request.SetResponseStatus(userver::server::http::HttpStatus::kNotFound);
+  return userver::formats::json::MakeObject(
+      "message", fmt::format("Can't find user with id {}", nickname));
 }
 
 }  // namespace User

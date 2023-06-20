@@ -54,6 +54,7 @@ class UserCreate final : public userver::server::handlers::HttpHandlerJsonBase {
           nickname, fullname, about, email);
       const auto& user = result.AsSingleRow<User::TypePG>(
           userver::storages::postgres::kRowTag);
+
       request.SetResponseStatus(userver::server::http::HttpStatus::kCreated);
       return User::MakeJson(user);
     } catch (...) {
@@ -64,10 +65,12 @@ class UserCreate final : public userver::server::handlers::HttpHandlerJsonBase {
           nickname, email);
       auto users =
           result.AsSetOf<User::TypePG>(userver::storages::postgres::kRowTag);
+
       userver::formats::json::ValueBuilder builder;
       for (const auto& user : users) {
         builder.PushBack(User::MakeJson(user));
       }
+
       request.SetResponseStatus(userver::server::http::HttpStatus::kConflict);
       return builder.ExtractValue();
     }

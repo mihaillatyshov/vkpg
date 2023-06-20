@@ -6,8 +6,10 @@
 #include <userver/utils/daemon_run.hpp>
 
 #include "Forums/ForumCreate.hpp"
+#include "Forums/ForumDetails.hpp"
 #include "Users/UserCreate.hpp"
 #include "Users/UserProfile.hpp"
+#include "Users/UsersByForum.hpp"
 #include "hello.hpp"
 
 int main(int argc, char* argv[]) {
@@ -21,6 +23,8 @@ int main(int argc, char* argv[]) {
   vkpg::AppendUserCreate(component_list);
   vkpg::AppendUserProfile(component_list);
   vkpg::AppendForumCreate(component_list);
+  vkpg::AppendForumDetails(component_list);
+  vkpg::AppendUsersByForum(component_list);
 
   return userver::utils::DaemonMain(argc, argv, component_list);
 }

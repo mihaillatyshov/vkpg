@@ -56,20 +56,12 @@ class UserProfile final
   }
 
  private:
-  userver::formats::json::Value ReturnNotFound(
-      const userver::server::http::HttpRequest& request,
-      std::string_view nickname) const {
-    request.SetResponseStatus(userver::server::http::HttpStatus::kNotFound);
-    return userver::formats::json::MakeObject(
-        "message", fmt::format("Can't find user with id {}", nickname));
-  }
-
   userver::formats::json::Value GetValue(
       const userver::server::http::HttpRequest& request,
       std::string_view nickname) const {
     auto result = User::SelectByNickname(m_ClusterPG, nickname);
     if (result.IsEmpty()) {
-      return ReturnNotFound(request, nickname);
+      return User::ReturnNotFound(request, nickname);
     }
 
     const auto& user =
@@ -94,7 +86,7 @@ class UserProfile final
 
     auto result = User::SelectByNickname(m_ClusterPG, nickname);
     if (result.IsEmpty()) {
-      return ReturnNotFound(request, nickname);
+      return User::ReturnNotFound(request, nickname);
     }
 
     try {

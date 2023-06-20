@@ -12,16 +12,21 @@ add_library(${PROJECT_NAME}_objs OBJECT
     src/hello.hpp
     src/hello.cpp
 
-    src/Users/User.cpp
     src/Users/User.hpp
+    src/Users/User.cpp
     src/Users/UserCreate.hpp
     src/Users/UserCreate.cpp
     src/Users/UserProfile.hpp
     src/Users/UserProfile.cpp
+    src/Users/UsersByForum.hpp
+    src/Users/UsersByForum.cpp
     
     src/Forums/Forum.hpp
+    src/Forums/Forum.cpp
     src/Forums/ForumCreate.hpp
     src/Forums/ForumCreate.cpp
+    src/Forums/ForumDetails.hpp
+    src/Forums/ForumDetails.cpp
 )
 target_link_libraries(${PROJECT_NAME}_objs PUBLIC userver-core userver-postgresql)
 
