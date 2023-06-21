@@ -27,6 +27,12 @@ add_library(${PROJECT_NAME}_objs OBJECT
     src/Forums/ForumCreate.cpp
     src/Forums/ForumDetails.hpp
     src/Forums/ForumDetails.cpp
+
+    
+    src/Threads/Thread.hpp
+    src/Threads/Thread.cpp
+    src/Threads/ThreadCreate.hpp
+    src/Threads/ThreadCreate.cpp
 )
 target_link_libraries(${PROJECT_NAME}_objs PUBLIC userver-core userver-postgresql)
 

@@ -1,10 +1,10 @@
-import requests
 import unittest
 
+import requests
 
 host = "http://localhost:8080/api"
 
-class User(unittest.TestCase):
+class TestUser(unittest.TestCase):
     def userCreate(self, id, json, resStatus = 201):
         with self.subTest(id=id, json=json, resStatus=resStatus):
             resp = requests.post(f"{host}/user/lm{id}/create", json=json)

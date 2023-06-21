@@ -10,6 +10,14 @@ namespace vkpg {
 
 namespace Thread {
 
+using TypeNoUserNoForumPG = std::tuple<int,          // id
+                                       std::string,  // title
+                                       std::string,  // message
+                                       std::string,  // slug
+                                       int,          // votes
+                                       std::string   // created
+                                       >;
+
 using TypePG = std::tuple<int,          // id
                           std::string,  // title
                           std::string,  // message
@@ -30,6 +38,10 @@ userver::formats::json::Value MakeJson(int id,                    //
                                        std::string_view created);
 
 userver::formats::json::Value MakeJson(const TypePG& thread);
+
+userver::formats::json::Value MakeJson(const TypeNoUserNoForumPG& thread,
+                                       std::string_view author,
+                                       std::string_view forum);
 
 userver::storages::postgres::ResultSet SelectBySlug(
     const userver::storages::postgres::ClusterPtr& cluster,

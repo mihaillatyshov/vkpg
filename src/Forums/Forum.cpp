@@ -79,6 +79,18 @@ void AddUser(const userver::storages::postgres::ClusterPtr& cluster, int userId,
   }
 }
 
+void AddUser(const userver::storages::postgres::ClusterPtr& cluster, int userId,
+             int forumId) {
+  cluster->Execute(userver::storages::postgres::ClusterHostType::kMaster,
+                   "INSERT INTO tp.forums_users(forum_id, user_id) "
+                   "VALUES($1, $2) "
+                   "ON CONFLICT DO NOTHING ",
+                   forumId, userId);
+  try {
+  } catch (...) {
+  }
+}
+
 }  // namespace Forum
 
 }  // namespace vkpg

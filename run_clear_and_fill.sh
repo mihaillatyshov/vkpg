@@ -10,3 +10,7 @@ echo " "
 echo "-- Forums"
 python3 -m unittest -v fill_forum.py
 echo " "
+
+echo "-- Threads"
+python3 -m unittest -v fill_thread.py
+echo " "

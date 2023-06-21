@@ -23,10 +23,10 @@ CREATE TABLE IF NOT EXISTS tp.forums (
 CREATE TABLE IF NOT EXISTS tp.threads(
     id SERIAL PRIMARY KEY,
     title VARCHAR NOT NULL,
-    slug VARCHAR NOT NULL,
+    slug VARCHAR UNIQUE NOT NULL,
     message VARCHAR NOT NULL,
     votes INTEGER DEFAULT 0,
-    creted_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     
     forum_id INTEGER REFERENCES tp.forums NOT NULL,
     user_id INTEGER REFERENCES tp.users NOT NULL 
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS tp.posts (
     id SERIAL PRIMARY KEY,
     message VARCHAR NOT NULL,
     is_edited BOOLEAN DEFAULT FALSE,
-    creted_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
     path INTEGER[] NOT NULL,
 
     thread_id INTEGER REFERENCES tp.threads NOT NULL,

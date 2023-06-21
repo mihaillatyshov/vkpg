@@ -49,6 +49,9 @@ userver::formats::json::Value ReturnNotFound(
 void AddUser(const userver::storages::postgres::ClusterPtr& cluster, int userId,
              std::string_view slug);
 
+void AddUser(const userver::storages::postgres::ClusterPtr& cluster, int userId,
+             int forumId);
+
 }  // namespace Forum
 
 }  // namespace vkpg

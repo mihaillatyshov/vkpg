@@ -1,10 +1,10 @@
-import requests
 import unittest
 
+import requests
 
 host = "http://localhost:8080/api"
 
-class User(unittest.TestCase):
+class TestForum(unittest.TestCase):
     def forumCreate(self, json, resStatus = 201):
         with self.subTest(json=json, resStatus=resStatus):
             resp = requests.post(f"{host}/forum/create", json=json)
@@ -25,6 +25,7 @@ class User(unittest.TestCase):
     
 
     def test_forumCreate(self):
+        print()
         for i in [1, 2, 3, 4]:
             self.forumCreate({
                 "title": f"Title {i}",
@@ -46,10 +47,12 @@ class User(unittest.TestCase):
         
         
     def test_forumDetails(self):
+        print()
         self.forumDetails("forum-slug-1");
         self.forumDetails("forum-slug-5", 404);
         
     def test_forumUsers(self):
+        print()
         self.forumUsers("forum-slug-1");
         self.forumUsers("forum-slug-5", 404);
         
