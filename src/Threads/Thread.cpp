@@ -1,22 +1,26 @@
 #include "Thread.hpp"
 
+#include <fmt/format.h>
+
 namespace vkpg {
 
 namespace Thread {
 
-userver::formats::json::Value MakeJson(int id,                    //
-                                       std::string_view title,    //
-                                       std::string_view message,  //
-                                       std::string_view slug,     //
-                                       int votes,                 //
-                                       std::string_view author,   //
-                                       std::string_view forum,    //
+userver::formats::json::Value MakeJson(int id,                           //
+                                       std::string_view title,           //
+                                       std::string_view message,         //
+                                       std::optional<std::string> slug,  //
+                                       int votes,                        //
+                                       std::string_view author,          //
+                                       std::string_view forum,           //
                                        std::string_view created) {
   userver::formats::json::ValueBuilder builder;
   builder["id"] = id;
   builder["title"] = title;
   builder["message"] = message;
-  builder["slug"] = slug;
+  if (slug.has_value()) {
+    builder["slug"] = slug.value();
+  }
   builder["votes"] = votes;
   builder["author"] = author;
   builder["forum"] = forum;
@@ -54,12 +58,44 @@ userver::storages::postgres::ResultSet SelectBySlug(
     std::string_view slug) {
   return cluster->Execute(userver::storages::postgres::ClusterHostType::kMaster,
                           "SELECT t.id, t.title, t.message, t.slug, t.votes, "
-                          "u.nickname, f.slug, t.created_at "
+                          "u.nickname, f.slug, "
+                          "to_char(t.created_at, 'YYYY:MM:DD HH24:MI:SS:MS') "
                           "FROM tp.threads AS t "
                           "JOIN tp.forums AS f ON t.forum_id = f.id "
                           "JOIN tp.users AS u ON t.user_id = u.id "
                           "WHERE lower(t.slug) = lower($1) ",
                           slug);
+}
+
+userver::storages::postgres::ResultSet SelectById(
+    const userver::storages::postgres::ClusterPtr& cluster, int id) {
+  return cluster->Execute(userver::storages::postgres::ClusterHostType::kMaster,
+                          "SELECT t.id, t.title, t.message, t.slug, t.votes, "
+                          "u.nickname, f.slug, "
+                          "to_char(t.created_at, 'YYYY:MM:DD HH24:MI:SS:MS') "
+                          "FROM tp.threads AS t "
+                          "JOIN tp.forums AS f ON t.forum_id = f.id "
+                          "JOIN tp.users AS u ON t.user_id = u.id "
+                          "WHERE t.id = $1 ",
+                          id);
+}
+
+userver::storages::postgres::ResultSet SelectBySlugOrId(
+    const userver::storages::postgres::ClusterPtr& cluster,
+    std::string_view slugOrId) {
+  bool slugIsInt =
+      slugOrId.find_first_not_of("0123456789") == std::string::npos;
+  if (slugIsInt) {
+    return SelectById(cluster, std::stoi(slugOrId.data()));
+  }
+  return SelectBySlug(cluster, slugOrId);
+}
+
+userver::formats::json::Value ReturnNotFound(
+    const userver::server::http::HttpRequest& request, std::string_view slug) {
+  request.SetResponseStatus(userver::server::http::HttpStatus::kNotFound);
+  return userver::formats::json::MakeObject(
+      "message", fmt::format("Can't find thread with id {}", slug));
 }
 
 }  // namespace Thread

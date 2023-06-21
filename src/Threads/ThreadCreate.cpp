@@ -37,14 +37,15 @@ class ThreadCreate final
       const userver::server::http::HttpRequest& request,
       const userver::formats::json::Value& json,
       userver::server::request::RequestContext&) const override {
-    const auto& slug = request.GetPathArg("slug");
+    const auto& forumSlug = request.GetPathArg("slug");
     const auto title = json["title"].As<std::string>("");
     const auto nickname = json["author"].As<std::string>("");
     const auto message = json["message"].As<std::string>("");
-    const auto created = json["created"].As<std::optional<std::string>>(
-        "2017-01-01T00:00:00.000Z");
+    const auto created = json["created"].As<std::optional<std::string>>({});
+    const auto threadSlug = json["slug"].As<std::optional<std::string>>({});
 
-    if (slug.empty() || title.empty() || nickname.empty() || message.empty()) {
+    if (forumSlug.empty() || title.empty() || nickname.empty() ||
+        message.empty()) {
       request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
       return userver::formats::json::MakeObject("message", "bad data");
     }
@@ -55,9 +56,9 @@ class ThreadCreate final
     }
     const int userId = userResult.AsSingleRow<int>();
 
-    auto forumResult = Forum::SelectIdBySlug(m_ClusterPG, slug);
+    auto forumResult = Forum::SelectIdBySlug(m_ClusterPG, forumSlug);
     if (forumResult.IsEmpty()) {
-      return Forum::ReturnNotFound(request, slug);
+      return Forum::ReturnNotFound(request, forumSlug);
     }
     const int forumId = forumResult.AsSingleRow<int>();
 
@@ -69,16 +70,16 @@ class ThreadCreate final
           "VALUES($1, $2, $3, "
           "CASE WHEN $4 IS NULL THEN NOW() ELSE $4::TIMESTAMPTZ END, "
           "$5, $6) "
-          "RETURNING id, title, message, slug, votes, created_at",
-          title, slug, message, "2017-01-01T00:00:00.000Z", forumId, userId);
-      Forum::AddUser(m_ClusterPG, userId, slug);
+          "RETURNING id, title, message, slug, votes, created_at ",
+          title, threadSlug, message, created, forumId, userId);
+      Forum::AddUser(m_ClusterPG, userId, forumSlug);
       const auto& thread = result.AsSingleRow<Thread::TypeNoUserNoForumPG>(
           userver::storages::postgres::kRowTag);
 
       request.SetResponseStatus(userver::server::http::HttpStatus::kCreated);
-      return Thread::MakeJson(thread, nickname, slug);
+      return Thread::MakeJson(thread, nickname, forumSlug);
     } catch (...) {
-      auto result = Thread::SelectBySlug(m_ClusterPG, slug);
+      auto result = Thread::SelectBySlug(m_ClusterPG, threadSlug.value());
       const auto& thread = result.AsSingleRow<Thread::TypePG>(
           userver::storages::postgres::kRowTag);
 

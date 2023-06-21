@@ -88,11 +88,21 @@ components_manager:
             path: /api/forum/{slug}/users
             method: GET
             task_processor: main-task-processor
+            
+        handler-forum-threads:
+            path: /api/forum/{slug}/threads
+            method: GET
+            task_processor: main-task-processor
 
 
         handler-thread-create:
             path: /api/forum/{slug}/create
             method: POST
+            task_processor: main-task-processor
+
+        handler-thread-details:
+            path: /api/thread/{slug_or_id}/details
+            method: GET,POST
             task_processor: main-task-processor
 
 

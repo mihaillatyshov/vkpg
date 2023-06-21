@@ -8,6 +8,8 @@
 #include "Forums/ForumCreate.hpp"
 #include "Forums/ForumDetails.hpp"
 #include "Threads/ThreadCreate.hpp"
+#include "Threads/ThreadDetails.hpp"
+#include "Threads/ThreadsByForum.hpp"
 #include "Users/UserCreate.hpp"
 #include "Users/UserProfile.hpp"
 #include "Users/UsersByForum.hpp"
@@ -27,6 +29,8 @@ int main(int argc, char* argv[]) {
   vkpg::AppendForumDetails(component_list);
   vkpg::AppendUsersByForum(component_list);
   vkpg::AppendThreadCreate(component_list);
+  vkpg::AppendThreadDetails(component_list);
+  vkpg::AppendThreadsByForum(component_list);
 
   return userver::utils::DaemonMain(argc, argv, component_list);
 }

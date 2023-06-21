@@ -1,8 +1,9 @@
-#include "UsersByForum.hpp"
+
+#include "ThreadsByForum.hpp"
 
 #include "../Forums/Forum.hpp"
 #include "../Utils/Utils.hpp"
-#include "User.hpp"
+#include "Thread.hpp"
 
 #include <fmt/format.h>
 #include <string>
@@ -20,13 +21,13 @@ namespace vkpg {
 
 namespace {
 
-class UsersByForum final
+class ThreadsByForum final
     : public userver::server::handlers::HttpHandlerJsonBase {
  public:
-  static constexpr std::string_view kName = "handler-forum-users";
+  static constexpr std::string_view kName = "handler-forum-threads";
 
-  UsersByForum(const userver::components::ComponentConfig& config,
-               const userver::components::ComponentContext& component_context)
+  ThreadsByForum(const userver::components::ComponentConfig& config,
+                 const userver::components::ComponentContext& component_context)
       : HttpHandlerJsonBase(config, component_context),
         m_ClusterPG(
             component_context
@@ -39,7 +40,7 @@ class UsersByForum final
       userver::server::request::RequestContext&) const override {
     const auto& slug = request.GetPathArg("slug");
 
-    std::string since = Utils::GetSinceStr(request);
+    std::string since = Utils::GetSinceStr(request, "0001-01-01T00:00:00.000Z");
     int limit = Utils::GetLimit(request);
     bool desc = Utils::GetDesc(request);
 
@@ -56,11 +57,14 @@ class UsersByForum final
 
     auto result = m_ClusterPG->Execute(
         userver::storages::postgres::ClusterHostType::kMaster,
-        fmt::format("SELECT u.nickname, u.fullname, u.about, u.email FROM "
-                    "tp.users AS u "
-                    "JOIN tp.forums_users AS fu ON fu.user_id = u.id "
-                    "WHERE fu.forum_id = $1 AND lower(u.nickname) > lower($2) "
-                    "ORDER BY u.nickname {} "
+        fmt::format("SELECT t.id, t.title, t.message, t.slug, t.votes, "
+                    "u.nickname, f.slug, "
+                    "to_char(t.created_at, 'YYYY:MM:DD HH24:MI:SS:MS') "
+                    "FROM tp.threads AS t "
+                    "JOIN tp.forums AS f ON t.forum_id = f.id "
+                    "JOIN tp.users AS u ON t.user_id = u.id "
+                    "WHERE t.forum_id = $1 AND t.created_at >= $2::TIMESTAMPTZ "
+                    "ORDER BY t.created_at {} "
                     "LIMIT $3 ",
                     desc ? "DESC" : ""),
         forumId, since, limit);
@@ -68,12 +72,12 @@ class UsersByForum final
     if (result.IsEmpty()) {
       return userver::formats::json::MakeArray();
     }
-    auto users =
-        result.AsSetOf<User::TypePG>(userver::storages::postgres::kRowTag);
+    auto threads =
+        result.AsSetOf<Thread::TypePG>(userver::storages::postgres::kRowTag);
 
     userver::formats::json::ValueBuilder builder;
-    for (const auto& user : users) {
-      builder.PushBack(User::MakeJson(user));
+    for (const auto& thread : threads) {
+      builder.PushBack(Thread::MakeJson(thread));
     }
     return builder.ExtractValue();
   }
@@ -84,8 +88,8 @@ class UsersByForum final
 
 }  // namespace
 
-void AppendUsersByForum(userver::components::ComponentList& component_list) {
-  component_list.Append<UsersByForum>();
+void AppendThreadsByForum(userver::components::ComponentList& component_list) {
+  component_list.Append<ThreadsByForum>();
 }
 
 }  // namespace vkpg

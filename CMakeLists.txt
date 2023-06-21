@@ -11,6 +11,9 @@ add_subdirectory(third_party/userver)
 add_library(${PROJECT_NAME}_objs OBJECT
     src/hello.hpp
     src/hello.cpp
+    
+    src/Utils/Utils.hpp
+    src/Utils/Utils.cpp
 
     src/Users/User.hpp
     src/Users/User.cpp
@@ -33,6 +36,10 @@ add_library(${PROJECT_NAME}_objs OBJECT
     src/Threads/Thread.cpp
     src/Threads/ThreadCreate.hpp
     src/Threads/ThreadCreate.cpp
+    src/Threads/ThreadDetails.hpp
+    src/Threads/ThreadDetails.cpp
+    src/Threads/ThreadsByForum.hpp
+    src/Threads/ThreadsByForum.cpp
 )
 target_link_libraries(${PROJECT_NAME}_objs PUBLIC userver-core userver-postgresql)
 
