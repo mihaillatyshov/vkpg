@@ -4,11 +4,16 @@ CREATE SCHEMA IF NOT EXISTS tp;
 
 CREATE TABLE IF NOT EXISTS tp.users (
     id SERIAL PRIMARY KEY,
-    nickname VARCHAR UNIQUE NOT NULL,
+    nickname VARCHAR NOT NULL,
     fullname VARCHAR NOT NULL,
     about TEXT,
-    email VARCHAR UNIQUE NOT NULL
+    email VARCHAR NOT NULL
 );
+
+CREATE UNIQUE INDEX ON tp.users (lower(nickname));
+
+create unique INDEX ON tp.users (lower(email));
+
 
 CREATE TABLE IF NOT EXISTS tp.forums (
     id SERIAL PRIMARY KEY,

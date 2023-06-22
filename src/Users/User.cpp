@@ -33,7 +33,7 @@ userver::storages::postgres::ResultSet SelectByNickname(
   return cluster->Execute(
       userver::storages::postgres::ClusterHostType::kMaster,
       "SELECT nickname, fullname, about, email FROM tp.users "
-      "WHERE lower(nickname) = ($1) ",
+      "WHERE lower(nickname) = lower($1) ",
       nickname);
 }
 
@@ -42,7 +42,7 @@ userver::storages::postgres::ResultSet SelectIdByNickname(
     std::string_view nickname) {
   return cluster->Execute(
       userver::storages::postgres::ClusterHostType::kMaster,
-      "SELECT id FROM tp.users WHERE lower(nickname) = ($1) ", nickname);
+      "SELECT id FROM tp.users WHERE lower(nickname) = lower($1) ", nickname);
 }
 
 userver::formats::json::Value ReturnNotFound(
