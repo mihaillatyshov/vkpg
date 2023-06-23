@@ -46,7 +46,7 @@ class PostsCreate final
       return userver::formats::json::MakeObject("message", "bad data");
     }
     const auto threadResult =
-        Thread::SelectIdAndThreadIdSlugBySlugOrId(m_ClusterPG, slugOrId);
+        Thread::SelectIdAndForumIdSlugBySlugOrId(m_ClusterPG, slugOrId);
     if (threadResult.IsEmpty()) {
       return Thread::ReturnNotFound(request, slugOrId);
     }

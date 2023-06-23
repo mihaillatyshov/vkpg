@@ -7,10 +7,15 @@
 
 #include "Forums/ForumCreate.hpp"
 #include "Forums/ForumDetails.hpp"
+#include "Posts/PostDetails.hpp"
 #include "Posts/PostsCreate.hpp"
+#include "Posts/PostsGet.hpp"
+#include "Service/ServiceClear.hpp"
+#include "Service/ServiceStatus.hpp"
 #include "Threads/ThreadCreate.hpp"
 #include "Threads/ThreadDetails.hpp"
 #include "Threads/ThreadsByForum.hpp"
+#include "Threads/Vote.hpp"
 #include "Users/UserCreate.hpp"
 #include "Users/UserProfile.hpp"
 #include "Users/UsersByForum.hpp"
@@ -34,7 +39,14 @@ int main(int argc, char* argv[]) {
   vkpg::AppendThreadCreate(component_list);
   vkpg::AppendThreadDetails(component_list);
   vkpg::AppendThreadsByForum(component_list);
+  vkpg::AppendThreadVote(component_list);
+
   vkpg::AppendPostsCreate(component_list);
+  vkpg::AppendPostsGet(component_list);
+  vkpg::AppendPostDetails(component_list);
+
+  vkpg::AppendServiceClear(component_list);
+  vkpg::AppendServiceStatus(component_list);
 
   return userver::utils::DaemonMain(argc, argv, component_list);
 }

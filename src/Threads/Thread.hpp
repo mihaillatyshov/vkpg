@@ -55,7 +55,11 @@ userver::storages::postgres::ResultSet SelectBySlugOrId(
     const userver::storages::postgres::ClusterPtr& cluster,
     std::string_view slugOrId);
 
-userver::storages::postgres::ResultSet SelectIdAndThreadIdSlugBySlugOrId(
+userver::storages::postgres::ResultSet SelectIdAndForumIdSlugBySlugOrId(
+    const userver::storages::postgres::ClusterPtr& cluster,
+    std::string_view slugOrId);
+
+userver::storages::postgres::ResultSet SelectIdBySlugOrId(
     const userver::storages::postgres::ClusterPtr& cluster,
     std::string_view slugOrId);
 

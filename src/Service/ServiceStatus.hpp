@@ -4,6 +4,6 @@
 
 namespace vkpg {
 
-void AppendThreadVote(userver::components::ComponentList& component_list);
+void AppendServiceStatus(userver::components::ComponentList& component_list);
 
 }  // namespace vkpg

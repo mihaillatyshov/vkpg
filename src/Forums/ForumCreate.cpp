@@ -61,7 +61,7 @@ class ForumCreate final
           "VALUES($1, $2, $3) "
           "RETURNING title, slug, posts, threads ",
           title, slug, userId);
-      Forum::AddUser(m_ClusterPG, userId, slug);
+      // Forum::AddUser(m_ClusterPG, userId, slug);
       const auto& forum = result.AsSingleRow<Forum::TypeNoUserPG>(
           userver::storages::postgres::kRowTag);
 

@@ -19,6 +19,9 @@ std::string GetSinceStr(const userver::server::http::HttpRequest& request,
 
 int GetSinceInt(const userver::server::http::HttpRequest& request, int def = 0);
 
+std::string GetSort(const userver::server::http::HttpRequest& request,
+                    std::string def = "flat");
+
 template <typename T>
 std::string AddToUpdatePG(userver::storages::postgres::ParameterStore& params,
                           std::string_view name, const T& param,

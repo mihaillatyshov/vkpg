@@ -25,6 +25,12 @@ int GetSinceInt(const userver::server::http::HttpRequest& request, int def) {
   return def;
 }
 
+std::string GetSort(const userver::server::http::HttpRequest& request,
+                    std::string def) {
+  if (request.HasArg("sort")) return request.GetArg("sort");
+  return def;
+}
+
 }  // namespace Utils
 
 }  // namespace vkpg

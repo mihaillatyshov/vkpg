@@ -1,5 +1,6 @@
 #include "ThreadDetails.hpp"
 
+#include "../Utils/Utils.hpp"
 #include "Thread.hpp"
 
 #include <fmt/format.h>
@@ -78,33 +79,51 @@ class ThreadDetails final
     const auto title = json["title"].As<std::string>("");
     const auto message = json["message"].As<std::string>("");
 
-    if (title.empty() || message.empty()) {
-      request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
-      return userver::formats::json::MakeObject("message", "bad data");
+    if (title.empty() && message.empty()) {
+      auto result = Thread::SelectBySlugOrId(m_ClusterPG, slugOrId);
+      if (result.IsEmpty()) {
+        return Thread::ReturnNotFound(request, slugOrId);
+      }
+      const auto& thread = result.AsSingleRow<Thread::TypePG>(
+          userver::storages::postgres::kRowTag);
+
+      return Thread::MakeJson(thread);
     }
+
+    userver::storages::postgres::ParameterStore params;
+    std::string insertParams = "";
+    if (!title.empty())
+      insertParams += Utils::AddToUpdatePG(params, "title", title);
+    if (!message.empty())
+      insertParams += Utils::AddToUpdatePG(params, "message", message);
+    insertParams.pop_back();
 
     bool slugIsInt =
         slugOrId.find_first_not_of("0123456789") == std::string::npos;
 
     int id = 0;
     if (slugIsInt) {
+      params.PushBack(std::stoi(slugOrId.data()));
       auto result = m_ClusterPG->Execute(
           userver::storages::postgres::ClusterHostType::kMaster,
-          "UPDATE tp.threads SET title = $2, message = $3 "
-          "WHERE id = $1 "
-          "RETURNING id ",
-          std::stoi(slugOrId.data()), title, message);
+          fmt::format("UPDATE tp.threads SET {} "
+                      "WHERE id = ${} "
+                      "RETURNING id ",
+                      insertParams, params.Size()),
+          params);
       if (result.IsEmpty()) {
         return Thread::ReturnNotFound(request, slugOrId);
       }
       id = result.AsSingleRow<int>();
     } else {
+      params.PushBack(slugOrId);
       auto result = m_ClusterPG->Execute(
           userver::storages::postgres::ClusterHostType::kMaster,
-          "UPDATE tp.threads SET title = $2, message = $3 "
-          "WHERE lower(slug) = lower($1) "
-          "RETURNING id ",
-          slugOrId, title, message);
+          fmt::format("UPDATE tp.threads SET {} "
+                      "WHERE lower(slug) = lower(${}) "
+                      "RETURNING id ",
+                      insertParams, params.Size()),
+          params);
       if (result.IsEmpty()) {
         return Thread::ReturnNotFound(request, slugOrId);
       }

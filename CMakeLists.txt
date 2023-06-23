@@ -46,6 +46,15 @@ add_library(${PROJECT_NAME}_objs OBJECT
     src/Posts/Post.cpp
     src/Posts/PostsCreate.hpp
     src/Posts/PostsCreate.cpp
+    src/Posts/PostsGet.hpp
+    src/Posts/PostsGet.cpp
+    src/Posts/PostDetails.hpp
+    src/Posts/PostDetails.cpp
+
+    src/Service/ServiceClear.hpp
+    src/Service/ServiceClear.cpp
+    src/Service/ServiceStatus.hpp
+    src/Service/ServiceStatus.cpp
 )
 target_link_libraries(${PROJECT_NAME}_objs PUBLIC userver-core userver-postgresql)
 

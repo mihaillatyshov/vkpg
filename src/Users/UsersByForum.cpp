@@ -54,16 +54,26 @@ class UsersByForum final
     }
     const int forumId = forumResult.AsSingleRow<int>();
 
+    userver::storages::postgres::ParameterStore params;
+    params.PushBack(forumId);
+    params.PushBack(limit);
+    std::string sortStr = "";
+    if (!since.empty()) {
+      params.PushBack(since);
+      sortStr = fmt::format("AND lower(u.nickname) {} lower($3 COLLATE \"C\")",
+                            desc ? "<" : ">");
+    }
     auto result = m_ClusterPG->Execute(
         userver::storages::postgres::ClusterHostType::kMaster,
         fmt::format("SELECT u.nickname, u.fullname, u.about, u.email FROM "
                     "tp.users AS u "
                     "JOIN tp.forums_users AS fu ON fu.user_id = u.id "
-                    "WHERE fu.forum_id = $1 AND lower(u.nickname) > lower($2) "
-                    "ORDER BY u.nickname {} "
-                    "LIMIT $3 ",
-                    desc ? "DESC" : ""),
-        forumId, since, limit);
+                    "JOIN tp.forums AS f ON fu.forum_id = f.id "
+                    "WHERE fu.forum_id = $1 {} "
+                    "ORDER BY lower(u.nickname) {} "
+                    "LIMIT $2 ",
+                    sortStr, desc ? "DESC" : ""),
+        params);
 
     if (result.IsEmpty()) {
       return userver::formats::json::MakeArray();

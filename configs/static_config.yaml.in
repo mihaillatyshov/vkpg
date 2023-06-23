@@ -105,9 +105,35 @@ components_manager:
             method: GET,POST
             task_processor: main-task-processor
 
+        handler-thread-vote:
+            path: /api/thread/{slug_or_id}/vote
+            method: POST
+            task_processor: main-task-processor
+
             
         handler-posts-create:
             path: /api/thread/{slug_or_id}/create
+            method: POST
+            task_processor: main-task-processor
+
+        handler-posts-get:
+            path: /api/thread/{slug_or_id}/posts
+            method: GET
+            task_processor: main-task-processor
+
+        handler-post-details:
+            path: /api/post/{id}/details
+            method: GET,POST
+            task_processor: main-task-processor
+
+            
+        handler-service-status:
+            path: /api/service/status
+            method: GET
+            task_processor: main-task-processor
+            
+        handler-service-clear:
+            path: /api/service/clear
             method: POST
             task_processor: main-task-processor
 

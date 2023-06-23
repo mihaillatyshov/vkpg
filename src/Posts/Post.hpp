@@ -29,6 +29,15 @@ using TypeInsertPG = std::tuple<int,          // id
                                 std::string   // created
                                 >;
 
+using TypeBatchGetPG = std::tuple<int,          // id
+                                  int,          // parent
+                                  std::string,  // author
+                                  std::string,  // message
+                                  bool,         // isEdited
+                                  int,          // thread
+                                  std::string   // created
+                                  >;
+
 userver::formats::json::Value MakeJson(int id,                    //
                                        int parent,                //
                                        std::string_view author,   //
@@ -41,6 +50,17 @@ userver::formats::json::Value MakeJson(int id,                    //
 userver::formats::json::Value MakeJson(const TypeInsertPG& post,   //
                                        std::string_view nickname,  //
                                        std::string_view forum);
+
+userver::formats::json::Value MakeJson(const TypeBatchGetPG& post,  //
+                                       std::string_view forum);
+
+userver::formats::json::Value MakeJson(const TypePG& post);
+
+userver::storages::postgres::ResultSet SelectById(
+    const userver::storages::postgres::ClusterPtr& cluster, int id);
+
+userver::formats::json::Value ReturnNotFound(
+    const userver::server::http::HttpRequest& request, int id);
 
 }  // namespace Post
 

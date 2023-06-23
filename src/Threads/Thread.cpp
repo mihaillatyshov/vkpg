@@ -98,7 +98,7 @@ userver::storages::postgres::ResultSet SelectBySlugOrId(
   return SelectBySlug(cluster, slugOrId);
 }
 
-userver::storages::postgres::ResultSet SelectIdAndThreadIdSlugBySlugOrId(
+userver::storages::postgres::ResultSet SelectIdAndForumIdSlugBySlugOrId(
     const userver::storages::postgres::ClusterPtr& cluster,
     std::string_view slugOrId) {
   bool slugIsInt =
@@ -116,6 +116,25 @@ userver::storages::postgres::ResultSet SelectIdAndThreadIdSlugBySlugOrId(
       "SELECT t.id, t.forum_id, f.slug FROM tp.threads AS t "
       "JOIN tp.forums AS f ON t.forum_id = f.id "
       "WHERE lower(t.slug) = lower($1) ",
+      slugOrId);
+}
+
+userver::storages::postgres::ResultSet SelectIdBySlugOrId(
+    const userver::storages::postgres::ClusterPtr& cluster,
+    std::string_view slugOrId) {
+  bool slugIsInt =
+      slugOrId.find_first_not_of("0123456789") == std::string::npos;
+  if (slugIsInt) {
+    return cluster->Execute(  //
+        userver::storages::postgres::ClusterHostType::kMaster,
+        "SELECT id FROM tp.threads "
+        "WHERE id = $1 ",
+        std::stoi(slugOrId.data()));
+  }
+  return cluster->Execute(  //
+      userver::storages::postgres::ClusterHostType::kMaster,
+      "SELECT id FROM tp.threads "
+      "WHERE lower(slug) = lower($1) ",
       slugOrId);
 }
 
