@@ -105,6 +105,12 @@ components_manager:
             method: GET,POST
             task_processor: main-task-processor
 
+            
+        handler-posts-create:
+            path: /api/thread/{slug_or_id}/create
+            method: POST
+            task_processor: main-task-processor
+
 
         postgres-db-1:
             dbconnection: $dbconnection

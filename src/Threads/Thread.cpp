@@ -24,7 +24,10 @@ userver::formats::json::Value MakeJson(int id,                           //
   builder["votes"] = votes;
   builder["author"] = author;
   builder["forum"] = forum;
-  builder["created"] = created;
+  std::string created_at = created.data();
+  created_at[10] = 'T';
+  created_at.push_back('Z');
+  builder["created"] = created_at;
 
   return builder.ExtractValue();
 }
@@ -56,28 +59,32 @@ userver::formats::json::Value MakeJson(const TypeNoUserNoForumPG& thread,
 userver::storages::postgres::ResultSet SelectBySlug(
     const userver::storages::postgres::ClusterPtr& cluster,
     std::string_view slug) {
-  return cluster->Execute(userver::storages::postgres::ClusterHostType::kMaster,
-                          "SELECT t.id, t.title, t.message, t.slug, t.votes, "
-                          "u.nickname, f.slug, "
-                          "to_char(t.created_at, 'YYYY:MM:DD HH24:MI:SS:MS') "
-                          "FROM tp.threads AS t "
-                          "JOIN tp.forums AS f ON t.forum_id = f.id "
-                          "JOIN tp.users AS u ON t.user_id = u.id "
-                          "WHERE lower(t.slug) = lower($1) ",
-                          slug);
+  return cluster->Execute(
+      userver::storages::postgres::ClusterHostType::kMaster,
+      "SELECT t.id, t.title, t.message, t.slug, t.votes, "
+      "u.nickname, f.slug, "
+      "TO_CHAR(t.created_at::TIMESTAMPTZ AT TIME ZONE 'UTC', "
+      "'YYYY-MM-DD HH24:MI:SS.MS') "
+      "FROM tp.threads AS t "
+      "JOIN tp.forums AS f ON t.forum_id = f.id "
+      "JOIN tp.users AS u ON t.user_id = u.id "
+      "WHERE lower(t.slug) = lower($1) ",
+      slug);
 }
 
 userver::storages::postgres::ResultSet SelectById(
     const userver::storages::postgres::ClusterPtr& cluster, int id) {
-  return cluster->Execute(userver::storages::postgres::ClusterHostType::kMaster,
-                          "SELECT t.id, t.title, t.message, t.slug, t.votes, "
-                          "u.nickname, f.slug, "
-                          "to_char(t.created_at, 'YYYY:MM:DD HH24:MI:SS:MS') "
-                          "FROM tp.threads AS t "
-                          "JOIN tp.forums AS f ON t.forum_id = f.id "
-                          "JOIN tp.users AS u ON t.user_id = u.id "
-                          "WHERE t.id = $1 ",
-                          id);
+  return cluster->Execute(
+      userver::storages::postgres::ClusterHostType::kMaster,
+      "SELECT t.id, t.title, t.message, t.slug, t.votes, "
+      "u.nickname, f.slug, "
+      "TO_CHAR(t.created_at::TIMESTAMPTZ AT TIME ZONE 'UTC', "
+      "'YYYY-MM-DD HH24:MI:SS.MS') "
+      "FROM tp.threads AS t "
+      "JOIN tp.forums AS f ON t.forum_id = f.id "
+      "JOIN tp.users AS u ON t.user_id = u.id "
+      "WHERE t.id = $1 ",
+      id);
 }
 
 userver::storages::postgres::ResultSet SelectBySlugOrId(
@@ -89,6 +96,27 @@ userver::storages::postgres::ResultSet SelectBySlugOrId(
     return SelectById(cluster, std::stoi(slugOrId.data()));
   }
   return SelectBySlug(cluster, slugOrId);
+}
+
+userver::storages::postgres::ResultSet SelectIdAndThreadIdSlugBySlugOrId(
+    const userver::storages::postgres::ClusterPtr& cluster,
+    std::string_view slugOrId) {
+  bool slugIsInt =
+      slugOrId.find_first_not_of("0123456789") == std::string::npos;
+  if (slugIsInt) {
+    return cluster->Execute(  //
+        userver::storages::postgres::ClusterHostType::kMaster,
+        "SELECT t.id, t.forum_id, f.slug FROM tp.threads AS t "
+        "JOIN tp.forums AS f ON t.forum_id = f.id "
+        "WHERE t.id = $1 ",
+        std::stoi(slugOrId.data()));
+  }
+  return cluster->Execute(  //
+      userver::storages::postgres::ClusterHostType::kMaster,
+      "SELECT t.id, t.forum_id, f.slug FROM tp.threads AS t "
+      "JOIN tp.forums AS f ON t.forum_id = f.id "
+      "WHERE lower(t.slug) = lower($1) ",
+      slugOrId);
 }
 
 userver::formats::json::Value ReturnNotFound(

@@ -59,6 +59,15 @@ userver::storages::postgres::ResultSet SelectIdBySlug(
                           slug);
 }
 
+userver::storages::postgres::ResultSet SelectIdSlugBySlug(
+    const userver::storages::postgres::ClusterPtr& cluster,
+    std::string_view slug) {
+  return cluster->Execute(userver::storages::postgres::ClusterHostType::kMaster,
+                          "SELECT id, slug FROM tp.forums "
+                          "WHERE lower(slug) = lower($1) ",
+                          slug);
+}
+
 userver::formats::json::Value ReturnNotFound(
     const userver::server::http::HttpRequest& request, std::string_view slug) {
   request.SetResponseStatus(userver::server::http::HttpStatus::kNotFound);
@@ -74,9 +83,6 @@ void AddUser(const userver::storages::postgres::ClusterPtr& cluster, int userId,
       "VALUES((SELECT id FROM tp.forums WHERE lower(slug) = lower($1)), $2) "
       "ON CONFLICT DO NOTHING ",
       slug, userId);
-  try {
-  } catch (...) {
-  }
 }
 
 void AddUser(const userver::storages::postgres::ClusterPtr& cluster, int userId,
@@ -86,9 +92,20 @@ void AddUser(const userver::storages::postgres::ClusterPtr& cluster, int userId,
                    "VALUES($1, $2) "
                    "ON CONFLICT DO NOTHING ",
                    forumId, userId);
-  try {
-  } catch (...) {
-  }
+}
+
+void IncreaseThread(const userver::storages::postgres::ClusterPtr& cluster,
+                    int forumId) {
+  cluster->Execute(userver::storages::postgres::ClusterHostType::kMaster,
+                   "UPDATE tp.forums SET threads = threads + 1 WHERE id = $1 ",
+                   forumId);
+}
+
+void IncreasePosts(const userver::storages::postgres::ClusterPtr& cluster,
+                   int forumId, int postsCount) {
+  cluster->Execute(userver::storages::postgres::ClusterHostType::kMaster,
+                   "UPDATE tp.forums SET posts = posts + $2 WHERE id = $1 ",
+                   forumId, postsCount);
 }
 
 }  // namespace Forum

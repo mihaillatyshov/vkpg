@@ -56,11 +56,13 @@ class ThreadCreate final
     }
     const int userId = userResult.AsSingleRow<int>();
 
-    auto forumResult = Forum::SelectIdBySlug(m_ClusterPG, forumSlug);
+    auto forumResult = Forum::SelectIdSlugBySlug(m_ClusterPG, forumSlug);
     if (forumResult.IsEmpty()) {
       return Forum::ReturnNotFound(request, forumSlug);
     }
-    const int forumId = forumResult.AsSingleRow<int>();
+    const auto& [forumId, goodForumSlug] =
+        forumResult.AsSingleRow<std::tuple<int, std::string>>(
+            userver::storages::postgres::kRowTag);
 
     try {
       auto result = m_ClusterPG->Execute(
@@ -70,14 +72,17 @@ class ThreadCreate final
           "VALUES($1, $2, $3, "
           "CASE WHEN $4 IS NULL THEN NOW() ELSE $4::TIMESTAMPTZ END, "
           "$5, $6) "
-          "RETURNING id, title, message, slug, votes, created_at ",
+          "RETURNING id, title, message, slug, votes, "
+          "TO_CHAR(created_at::TIMESTAMPTZ AT TIME ZONE 'UTC',"
+          "'YYYY-MM-DD HH24:MI:SS.MS') ",
           title, threadSlug, message, created, forumId, userId);
-      Forum::AddUser(m_ClusterPG, userId, forumSlug);
+      Forum::AddUser(m_ClusterPG, userId, forumId);
+      Forum::IncreaseThread(m_ClusterPG, forumId);
       const auto& thread = result.AsSingleRow<Thread::TypeNoUserNoForumPG>(
           userver::storages::postgres::kRowTag);
 
       request.SetResponseStatus(userver::server::http::HttpStatus::kCreated);
-      return Thread::MakeJson(thread, nickname, forumSlug);
+      return Thread::MakeJson(thread, nickname, goodForumSlug);
     } catch (...) {
       auto result = Thread::SelectBySlug(m_ClusterPG, threadSlug.value());
       const auto& thread = result.AsSingleRow<Thread::TypePG>(

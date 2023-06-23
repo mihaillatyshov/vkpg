@@ -43,6 +43,10 @@ userver::storages::postgres::ResultSet SelectIdBySlug(
     const userver::storages::postgres::ClusterPtr& cluster,
     std::string_view slug);
 
+userver::storages::postgres::ResultSet SelectIdSlugBySlug(
+    const userver::storages::postgres::ClusterPtr& cluster,
+    std::string_view slug);
+
 userver::formats::json::Value ReturnNotFound(
     const userver::server::http::HttpRequest& request, std::string_view slug);
 
@@ -51,6 +55,12 @@ void AddUser(const userver::storages::postgres::ClusterPtr& cluster, int userId,
 
 void AddUser(const userver::storages::postgres::ClusterPtr& cluster, int userId,
              int forumId);
+
+void IncreaseThread(const userver::storages::postgres::ClusterPtr& cluster,
+                    int forumId);
+
+void IncreasePosts(const userver::storages::postgres::ClusterPtr& cluster,
+                   int forumId, int postsCount);
 
 }  // namespace Forum
 

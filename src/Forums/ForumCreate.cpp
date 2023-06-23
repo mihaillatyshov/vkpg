@@ -45,11 +45,14 @@ class ForumCreate final
       return userver::formats::json::MakeObject("message", "bad data");
     }
 
-    auto userResult = User::SelectIdByNickname(m_ClusterPG, nickname);
+    auto userResult = User::SelectFullByNickname(m_ClusterPG, nickname);
     if (userResult.IsEmpty()) {
       return User::ReturnNotFound(request, nickname);
     }
-    const int userId = userResult.AsSingleRow<int>();
+    const User::TypeWithIdPG user = userResult.AsSingleRow<User::TypeWithIdPG>(
+        userver::storages::postgres::kRowTag);
+    const int userId = std::get<0>(user);
+    const auto& nicknamePG = std::get<1>(user);
 
     try {
       auto result = m_ClusterPG->Execute(
@@ -63,7 +66,7 @@ class ForumCreate final
           userver::storages::postgres::kRowTag);
 
       request.SetResponseStatus(userver::server::http::HttpStatus::kCreated);
-      return Forum::MakeJson(forum, nickname);
+      return Forum::MakeJson(forum, nicknamePG);
     } catch (...) {
       auto result = Forum::SelectBySlug(m_ClusterPG, slug);
       const auto& forum = result.AsSingleRow<Forum::TypePG>(

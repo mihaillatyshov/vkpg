@@ -30,7 +30,6 @@ add_library(${PROJECT_NAME}_objs OBJECT
     src/Forums/ForumCreate.cpp
     src/Forums/ForumDetails.hpp
     src/Forums/ForumDetails.cpp
-
     
     src/Threads/Thread.hpp
     src/Threads/Thread.cpp
@@ -40,6 +39,13 @@ add_library(${PROJECT_NAME}_objs OBJECT
     src/Threads/ThreadDetails.cpp
     src/Threads/ThreadsByForum.hpp
     src/Threads/ThreadsByForum.cpp
+    src/Threads/Vote.hpp
+    src/Threads/Vote.cpp
+    
+    src/Posts/Post.hpp
+    src/Posts/Post.cpp
+    src/Posts/PostsCreate.hpp
+    src/Posts/PostsCreate.cpp
 )
 target_link_libraries(${PROJECT_NAME}_objs PUBLIC userver-core userver-postgresql)
 

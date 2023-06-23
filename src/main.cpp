@@ -7,6 +7,7 @@
 
 #include "Forums/ForumCreate.hpp"
 #include "Forums/ForumDetails.hpp"
+#include "Posts/PostsCreate.hpp"
 #include "Threads/ThreadCreate.hpp"
 #include "Threads/ThreadDetails.hpp"
 #include "Threads/ThreadsByForum.hpp"
@@ -25,12 +26,15 @@ int main(int argc, char* argv[]) {
   vkpg::AppendHello(component_list);
   vkpg::AppendUserCreate(component_list);
   vkpg::AppendUserProfile(component_list);
+  vkpg::AppendUsersByForum(component_list);
+
   vkpg::AppendForumCreate(component_list);
   vkpg::AppendForumDetails(component_list);
-  vkpg::AppendUsersByForum(component_list);
+
   vkpg::AppendThreadCreate(component_list);
   vkpg::AppendThreadDetails(component_list);
   vkpg::AppendThreadsByForum(component_list);
+  vkpg::AppendPostsCreate(component_list);
 
   return userver::utils::DaemonMain(argc, argv, component_list);
 }

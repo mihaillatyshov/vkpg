@@ -55,6 +55,10 @@ userver::storages::postgres::ResultSet SelectBySlugOrId(
     const userver::storages::postgres::ClusterPtr& cluster,
     std::string_view slugOrId);
 
+userver::storages::postgres::ResultSet SelectIdAndThreadIdSlugBySlugOrId(
+    const userver::storages::postgres::ClusterPtr& cluster,
+    std::string_view slugOrId);
+
 userver::formats::json::Value ReturnNotFound(
     const userver::server::http::HttpRequest& request, std::string_view slug);
 

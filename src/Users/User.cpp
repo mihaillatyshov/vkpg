@@ -37,6 +37,16 @@ userver::storages::postgres::ResultSet SelectByNickname(
       nickname);
 }
 
+userver::storages::postgres::ResultSet SelectFullByNickname(
+    const userver::storages::postgres::ClusterPtr& cluster,
+    std::string_view nickname) {
+  return cluster->Execute(
+      userver::storages::postgres::ClusterHostType::kMaster,
+      "SELECT id, nickname, fullname, about, email FROM tp.users "
+      "WHERE lower(nickname) = lower($1) ",
+      nickname);
+}
+
 userver::storages::postgres::ResultSet SelectIdByNickname(
     const userver::storages::postgres::ClusterPtr& cluster,
     std::string_view nickname) {

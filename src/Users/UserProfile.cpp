@@ -1,5 +1,6 @@
 #include "UserProfile.hpp"
 
+#include "../Utils/Utils.hpp"
 #include "User.hpp"
 
 #include <fmt/format.h>
@@ -10,6 +11,7 @@
 #include <userver/server/handlers/http_handler_json_base.hpp>
 #include <userver/storages/postgres/cluster.hpp>
 #include <userver/storages/postgres/component.hpp>
+#include <userver/storages/postgres/parameter_store.hpp>
 #include <userver/utils/assert.hpp>
 #include <userver/utils/fixed_array.hpp>
 
@@ -76,26 +78,43 @@ class UserProfile final
       std::string_view nickname,
       const userver::formats::json::Value& json) const {
     const auto fullname = json["fullname"].As<std::string>("");
-    const auto about = json["about"].As<std::optional<std::string>>({});
+    const auto about = json["about"].As<std::string>("");
     const auto email = json["email"].As<std::string>("");
-
-    if (fullname.empty() || email.empty()) {
-      request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
-      return userver::formats::json::MakeObject("message", "bad data");
-    }
 
     auto result = User::SelectByNickname(m_ClusterPG, nickname);
     if (result.IsEmpty()) {
       return User::ReturnNotFound(request, nickname);
     }
 
+    if (fullname.empty() && email.empty() && about.empty()) {
+      const auto& user = result.AsSingleRow<User::TypePG>(
+          userver::storages::postgres::kRowTag);
+      return User::MakeJson(user);
+    }
+
     try {
+      userver::storages::postgres::ParameterStore params;
+      params.PushBack(nickname);
+      std::string insertParams = "";
+      if (!fullname.empty())
+        insertParams += Utils::AddToUpdatePG(params, "fullname", fullname);
+      if (!email.empty())
+        insertParams += Utils::AddToUpdatePG(params, "email", email);
+      if (!about.empty())
+        insertParams += Utils::AddToUpdatePG(params, "about", about);
+      insertParams.pop_back();
+
       auto result = m_ClusterPG->Execute(
           userver::storages::postgres::ClusterHostType::kMaster,
-          "UPDATE tp.users SET fullname = $2, about = $3, email = $4 "
-          "WHERE lower(nickname) = lower($1) "
-          "RETURNING nickname, fullname, about, email",
-          nickname, fullname, about, email);
+          fmt::format("UPDATE tp.users SET {} "
+                      "WHERE lower(nickname) = lower($1) "
+                      "RETURNING nickname, fullname, about, email",
+                      insertParams),
+          params);
+      if (result.IsEmpty()) {
+        User::ReturnNotFound(request, nickname);
+      }
+
       const auto& user = result.AsSingleRow<User::TypePG>(
           userver::storages::postgres::kRowTag);
       return User::MakeJson(user);
